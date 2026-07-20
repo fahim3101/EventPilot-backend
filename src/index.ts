@@ -16,9 +16,26 @@ dotenv.config();
 const app = express();
 
 app.use(helmet());
+// CORS: allow a comma-separated list of origins in CLIENT_URL.
+// Strips any trailing slash so "https://app.com/" and "https://app.com"
+// are treated as the same origin (browsers are strict about this).
+const rawOrigins = process.env.CLIENT_URL || "http://localhost:3000";
+const allowedOrigins = rawOrigins
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow same-origin / curl / server-to-server (no Origin header).
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/+$/, "");
+      if (allowedOrigins.includes(cleanOrigin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );

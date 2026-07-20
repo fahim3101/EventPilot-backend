@@ -7,9 +7,11 @@ import { AuthRequest } from "../middleware/auth";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function signToken(id: string) {
-  return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-    expiresIn: (process.env.JWT_EXPIRES_IN as string) || "7d",
-  });
+  const secret: jwt.Secret = process.env.JWT_SECRET as string;
+  const options: jwt.SignOptions = {
+    expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as jwt.SignOptions["expiresIn"],
+  };
+  return jwt.sign({ id }, secret, options);
 }
 
 function sendAuthResponse(res: Response, user: any) {
